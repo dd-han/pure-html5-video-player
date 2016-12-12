@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>純 HTML 5 播放器測試</title>
+</head>
+
+<script>
+var videoDOM = {};
+function speed(value) {
+  var originSpeed = videoDOM.playbackRate;
+  var ratio = 1;
+  if (value>0) {
+    ratio = 1 + value; 
+  } else {
+    ratio = 1 / ( 1 - value );
+  }
+  var newSpeed = originSpeed * ratio;
+
+  videoDOM.playbackRate = newSpeed;
+  document.getElementById("play-speed").innerHTML = videoDOM.playbackRate;
+}
+
+window.onload = function() {
+  videoDOM = document.getElementById("video1");
+
+  videoDOM.onwaiting = function() {
+    console.log("start waiting");
+    document.getElementById("loading").style.display="";
+
+    var loadingInterval = setInterval(function() {
+      var state = videoDOM.readyState;
+      if (state == 4) {
+        console.log("loaded enough data, end of waiting");
+        document.getElementById("loading").style.display="none";
+        clearInterval(loadingInterval);
+      } else {
+        console.log("readyState", state);
+      }
+    },100);
+  };
+
+}
+
+</script>
+
+<style>
+  div#loading {
+	  width: 100%;
+  	/* height: 100%; */
+	  position: absolute;
+  	top: 0px;
+	  right: 0px;
+	  background-color: rgba(0,0,0,0.7);
+    color: rgb(255,255,255);
+    font-size: 120px;
+    text-align: center;
+    /* padding-top: calc(40% - 12px);*/
+  }
+</style>
+
+<body>
+  <h1>video</h1>
+  <video id="video1" width="640px" height="480px" controls>
+    <source src="some-video.mp4" type="video/mp4">
+    <!--
+    <source src="some-video-1.mp4" type="video/mp4">
+    -->
+    Your Browser too old !!
+  </video>
+
+  <h2>extra controlers</h2>
+  <button onclick="speed(+1)">Speed Up</button>
+  <button onclick="speed(-1)">Speed Down</button>
+
+  <h2>extra info</h2>
+  <h3>play speed</h3>
+  <p id="play-speed">1</p>
+
+  <div id="loading" style="display: none;">now&nbspLoading!!</div>
+
+</body>
+
+</html>
