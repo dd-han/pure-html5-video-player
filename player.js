@@ -5,17 +5,24 @@ var createPlayer  = function() {
   document.body.appendChild(video);
 }
 
-var player = function(containerID,file,config) {
+var player = function(containerID,files,config) {
   // for internal access
   var DOMs = {
     container: {},
-    videos: {},
+    video: {},
     playSpeedInfo: {},
     loadingHint: {}
   }
 
+  var playStatus = {
+    playlistIndex: 0,
+  };
+
+  var playlist = [];
+
   // public access function
   this.DOMs = DOMs; // debug using
+  this.playlist = playlist;
 
   this.setSpeed = function(speed) {
     videoDOM.playbackRate = speed;
@@ -26,50 +33,61 @@ var player = function(containerID,file,config) {
     if (showOrNot) {
       DOMs.loadingHint.style.display="";
     } else {
-      DOMs.logdingHint.style.display="none";
+      DOMs.loadingHint.style.display="none";
     }
+  }
+
+  var videoEndAction = function() {
+    playStatus.playlistIndex += 1;
+    if (playStatus.playlistIndex < playlist.length) {
+      playVideo();
+    } else {
+      console.log("ended");
+    }
+
+  }
+
+  var playVideo = function() {
+    DOMs.video.src = playlist[playStatus.playlistIndex].file;
+    DOMs.video.play();
   }
 
   // inits
   var initDOMs = function() {
     // find doms
     DOMs.container = document.getElementById(containerID);
-    DOMs.videos = DOMs.container.getElementsByTagName("video");
+    DOMs.video = DOMs.container.getElementsByTagName("video")[0];
     DOMs.playSpeedInfo = DOMs.container.getElementsByClassName("play-speed-info")[0];
     DOMs.loadingHint = DOMs.container.getElementsByClassName("loading-hint")[0];
   }
-  var initVideoDOMs = function(initThings) {
-    for (index = 0; index < DOMs.videos.length; index++) {
-      initThings(DOMs.videos[index]);
-    }
-  }
   var initPlayer = function() {
     // setup player
-    initVideoDOMs(function(video) {
-      video.controls = config.defaultControls;
-      video.style.width = config.playerWidth;
-      video.style.height = config.playerHeight;
-    });
+    DOMs.video.controls = config.defaultControls;
+    DOMs.video.style.width = config.playerWidth;
+    DOMs.video.style.height = config.playerHeight;
 
     // setup player file
-    DOMs.videos[0].src = file;
+    for (index in files) {
+      playlist.push({file: files[index]});
+    }
+
+    playVideo();
   }
   var initPlayerEvents = function() {
-    initVideoDOMs(function(video) {
-      // add buffer event
-      video.onwaiting = function() {
-        loadingHintDisplay(true);
-        var loadingInterval = setInterval(function() {
-          var state = video.readyState;
-          if (state == 4) {
-            loadingHintDisplay(false);
-            clearInterval(loadingInterval);
-          }
-        },100);
-      };
+    // add buffer event
+    DOMs.video.onwaiting = function() {
+      loadingHintDisplay(true);
+      var loadingInterval = setInterval(function() {
+        var state = DOMs.video.readyState;
+        if (state == 4) {
+          loadingHintDisplay(false);
+          clearInterval(loadingInterval);
+        }
+      },100);
+    };
       
-      // add xxxxxxx event
-    });
+    // add events
+    DOMs.video.onended = videoEndAction;
   }
 
   // constractor here
