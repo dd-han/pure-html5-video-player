@@ -24,17 +24,20 @@ var player = function(containerID,files,config) {
   var playStatus = {
     buffering: false,
     playlistIndex: 0,
+    dragging: false,
   };
 
 
   // public access function
   this.DOMs = DOMs; // debug using
   this.playlist = playlist;
+  this.playStatus = playStatus;
 
-  this.setSpeed = function(speed) {
+  var setSpeed = function(speed) {
     DOMs.video.playbackRate = speed;
     DOMs.playSpeedInfo.innerHTML = DOMs.video.playbackRate;
   }
+  this.setSpeed = setSpeed;
 
   // prettify code
   var unattend = true;
@@ -64,6 +67,17 @@ var player = function(containerID,files,config) {
   }
   this.stopVideo = stopVideo;
 
+  var seekbarInputAction = function(event) {
+    playStatus.dragging = true;
+  }
+
+  var seekbarChangeAction = function(event) {
+    playStatus.dragging = false;
+    var seekbarValue = event.target.value;
+    var videoTime = DOMs.video.duration * seekbarValue;
+    DOMs.video.currentTime = videoTime;
+  }
+
   var videoLaddedmetadataAction = function(event) {
     //var duration = DOMs.video.duration;
     //playlist[playStatus.playlistIndex].duration = duration;
@@ -71,9 +85,13 @@ var player = function(containerID,files,config) {
   }
 
   var videoTimeupdateAction = function(event) {
+    console.log("video time updated");
+    if (playStatus.dragging===true) {
+      return 0;
+    }
     try {
       var duration = DOMs.video.duration;
-      var position = event.target.played.end(0);
+      var position = event.target.currentTime;
       var seekbarValue = position / duration;
       DOMs.seekbar.value = seekbarValue;
       console.log("video time updated", position);
@@ -181,6 +199,8 @@ var player = function(containerID,files,config) {
     DOMs.pause.onclick = pauseVideo;
     DOMs.play.onclick = playVideo;
     DOMs.stop.onclick = stopVideo;
+    DOMs.seekbar.oninput = seekbarInputAction;
+    DOMs.seekbar.onchange = seekbarChangeAction;
   }
 
   // constractor here
