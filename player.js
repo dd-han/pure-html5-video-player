@@ -7,6 +7,7 @@ var createPlayer  = function() {
 
 var player = function(containerID,files,config) {
   // for internal access
+  var playlist = [];
   var DOMs = {
     container: {},
     video: {},
@@ -16,10 +17,9 @@ var player = function(containerID,files,config) {
   }
 
   var playStatus = {
+    buffering: false,
     playlistIndex: 0,
   };
-
-  var playlist = [];
 
   // public access function
   this.DOMs = DOMs; // debug using
@@ -30,27 +30,80 @@ var player = function(containerID,files,config) {
     DOMs.playSpeedInfo.innerHTML = DOMs.video.playbackRate;
   }
 
+  var playVideo = function() {
+    DOMs.video.play();
+  }
+  this.playVideo = playVideo;
+
+  var pauseVideo = function() {
+    DOMs.video.pause();
+  }
+  this.pauseVideo = pauseVideo;
+
+  var videoLaddedmetadataAction = function(event) {
+    //var duration = DOMs.video.duration;
+    //playlist[playStatus.playlistIndex].duration = duration;
+    //console.log("meta loaded",duration);
+  }
+
+  var videoTimeupdateAction = function(event) {
+    var duration = DOMs.video.duration;
+    var position = event.target.played.end(0);
+    var seekbarValue = position / duration;
+    DOMs.seekbar.value = seekbarValue;
+    console.log("video time updated", position);
+  }
+
+  var videoProgressAction = function(event) {
+    console.log("download some content");
+  }
+
+  // on play only works on resume from pause
+  var videoPlayAction = function(event) {
+    // seekbar updater
+    //playStatus.checkTimer = setInterval(checkTimerAction,100);
+  }
+
+  // onplaying works on anything that resume playing like buffered
+  var videoPlayingAction = function(event) {
+    if (playStatus.buffering) {
+      console.log("buffered");
+      loadingHintDisplay(false);
+    }
+    // seekbar updater
+    //playStatus.checkTimer = setInterval(checkTimerAction,100);
+  }
+
+  var videoPauseAction = function(event) {
+    //clearInterval(playStatus.checkTimer);
+  }
+
+  var videoEndAction = function(event) {
+    playStatus.playlistIndex += 1;
+    if (playStatus.playlistIndex < playlist.length) {
+      loadVideo();
+      playVideo();
+    } else {
+      console.log("ended");
+    }
+  }
+
+  var loadingAction = function() {
+    loadingHintDisplay(true);
+    playStatus.buffering = true;
+  };
+
+  var loadVideo = function() {
+    DOMs.video.src = playlist[playStatus.playlistIndex].file;
+  }
+
+  // low level functions
   var loadingHintDisplay = function(showOrNot) {
     if (showOrNot) {
       DOMs.loadingHint.style.display="";
     } else {
       DOMs.loadingHint.style.display="none";
     }
-  }
-
-  var videoEndAction = function() {
-    playStatus.playlistIndex += 1;
-    if (playStatus.playlistIndex < playlist.length) {
-      playVideo();
-    } else {
-      console.log("ended");
-    }
-
-  }
-
-  var playVideo = function() {
-    DOMs.video.src = playlist[playStatus.playlistIndex].file;
-    DOMs.video.play();
   }
 
   // inits
@@ -60,7 +113,7 @@ var player = function(containerID,files,config) {
     DOMs.video = DOMs.container.getElementsByTagName("video")[0];
     DOMs.playSpeedInfo = DOMs.container.getElementsByClassName("play-speed-info")[0];
     DOMs.loadingHint = DOMs.container.getElementsByClassName("loading-hint")[0];
-    DOMs.seekbar = DOMs.container.getElementsByClassName("seek-bar")[0];
+    DOMs.seekbar = DOMs.container.getElementsByClassName("seekbar")[0];
   }
   var initPlayer = function() {
     // setup player
@@ -72,29 +125,23 @@ var player = function(containerID,files,config) {
     for (index in files) {
       playlist.push({file: files[index]});
     }
-
-    playVideo();
   }
   var initPlayerEvents = function() {
-    // add buffer event
-    DOMs.video.onwaiting = function() {
-      loadingHintDisplay(true);
-      var loadingInterval = setInterval(function() {
-        var state = DOMs.video.readyState;
-        if (state == 4) {
-          loadingHintDisplay(false);
-          clearInterval(loadingInterval);
-        }
-      },100);
-    };
-      
-    // add events
+    DOMs.video.onwaiting = loadingAction;
     DOMs.video.onended = videoEndAction;
+    DOMs.video.onplay = videoPlayAction;
+    DOMs.video.onplaying = videoPlayingAction;
+    DOMs.video.onpause = videoPauseAction;
+    DOMs.video.onprogress = videoProgressAction;
+    DOMs.video.ontimeupdate = videoTimeupdateAction;
+    DOMs.video.onloadedmetadata = videoLaddedmetadataAction;
   }
 
   // constractor here
   initDOMs();
-  initPlayer();
   initPlayerEvents();
+  initPlayer();
 
+  loadVideo();
+  playVideo();
 }
