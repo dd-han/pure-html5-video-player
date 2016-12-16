@@ -63,9 +63,7 @@ var player = function(containerID,files,config) {
   var stopVideo = function() {
     showPauseBtn(false);
     showPlayBtn(true);
-    playStatus.playlistIndex = 0;
-    loadVideo();
-    //DOMs.video.currentTime = 0;
+    resetEnv();
   }
   this.stopVideo = stopVideo;
 
@@ -162,6 +160,23 @@ var player = function(containerID,files,config) {
     } else {
       DOM.style.display="none";
     }
+  }
+
+  var resetEnv = function() {
+    playStatus.playlistIndex = 0;
+    loadVideo();
+    setTimeout(function() {
+      DOMs.seekbar.value = 0;
+    },100);
+
+    playStatus = {
+      buffering: false,
+      playlistIndex: 0,
+      dragging: false,
+      playSpeed: 1,
+    };
+
+    //DOMs.video.currentTime = 0;
   }
 
   // inits
