@@ -10,7 +10,7 @@
     window.onload = function() {
       var config = {
         playerWidth: "640px",
-        playerHeight: "480px",
+        playerHeight: "320px",
         defaultControls: true
       };
       var files = [
@@ -28,8 +28,11 @@
     <video>
       Your Browser too old !!
     </video>
+    <h2>basic contol</h2>
 
-    <h2>extra controlers</h2>
+    <input type="range" class="seekbar slider" max="1" step="0.001" value="0">
+
+    <p>speed control</p>
     <button onclick="video1.setSpeed(16)">16x</button>
     <button onclick="video1.setSpeed(8)">8x</button>
     <button onclick="video1.setSpeed(1)">1x</button>

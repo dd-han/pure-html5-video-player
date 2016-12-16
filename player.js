@@ -10,6 +10,7 @@ var player = function(containerID,files,config) {
   var DOMs = {
     container: {},
     video: {},
+    seekbar: {},
     playSpeedInfo: {},
     loadingHint: {}
   }
@@ -59,6 +60,7 @@ var player = function(containerID,files,config) {
     DOMs.video = DOMs.container.getElementsByTagName("video")[0];
     DOMs.playSpeedInfo = DOMs.container.getElementsByClassName("play-speed-info")[0];
     DOMs.loadingHint = DOMs.container.getElementsByClassName("loading-hint")[0];
+    DOMs.seekbar = DOMs.container.getElementsByClassName("seek-bar")[0];
   }
   var initPlayer = function() {
     // setup player
