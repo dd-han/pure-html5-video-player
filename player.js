@@ -25,6 +25,7 @@ var player = function(containerID,files,config) {
     buffering: false,
     playlistIndex: 0,
     dragging: false,
+    playSpeed: 1,
   };
 
 
@@ -34,6 +35,7 @@ var player = function(containerID,files,config) {
   this.playStatus = playStatus;
 
   var setSpeed = function(speed) {
+    playStatus.playSpeed = speed;
     DOMs.video.playbackRate = speed;
     DOMs.playSpeedInfo.innerHTML = DOMs.video.playbackRate;
   }
@@ -128,6 +130,7 @@ var player = function(containerID,files,config) {
     playStatus.playlistIndex += 1;
     if (playStatus.playlistIndex < playlist.length) {
       loadVideo();
+      setSpeed(playStatus.playSpeed);
       playVideo(unattend);
     } else {
       console.log("ended");
