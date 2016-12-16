@@ -112,3 +112,14 @@ div#loading {
 .seek-bar {
 	width: 100%;
 }
+
+button.control {
+  height: 25px;
+  cursor: pointer;
+}
+
+button.fa.control {
+  /* font-size: initial; */
+  font-size: small;
+  width: 30px;
+}
