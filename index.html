@@ -13,7 +13,11 @@
         playerHeight: "480px",
         defaultControls: true
       };
-      video1 = new player("videoplayer-1",["http://192.168.168.66/oceans.mp4","http://192.168.168.66/oceans.mp4"],config);
+      var files = [
+        "http://192.168.168.66/oceans.mp4",
+        "http://192.168.168.66/oceans.mp4"
+      ]
+      video1 = new player("videoplayer-1",files,config);
     }
   </script>
 </head>
@@ -26,8 +30,9 @@
     </video>
 
     <h2>extra controlers</h2>
-    <button onclick="video1.speed(16)">16x</button>
-    <button onclick="video1.speed(1)">1x</button>
+    <button onclick="video1.setSpeed(16)">16x</button>
+    <button onclick="video1.setSpeed(8)">8x</button>
+    <button onclick="video1.setSpeed(1)">1x</button>
 
     <h2>extra info</h2>
     <h3>play speed</h3>

@@ -25,8 +25,8 @@ var player = function(containerID,files,config) {
   this.playlist = playlist;
 
   this.setSpeed = function(speed) {
-    videoDOM.playbackRate = speed;
-    DOMs.playSpeedInfo.innerHTML = videoDOM.playbackRate;
+    DOMs.video.playbackRate = speed;
+    DOMs.playSpeedInfo.innerHTML = DOMs.video.playbackRate;
   }
 
   var loadingHintDisplay = function(showOrNot) {
