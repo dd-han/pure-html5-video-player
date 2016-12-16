@@ -1,3 +1,5 @@
+var autoPlay = true;
+
 var createPlayer  = function() {
   throw("this function not working");
 
@@ -24,6 +26,7 @@ var player = function(containerID,files,config) {
     playlistIndex: 0,
   };
 
+
   // public access function
   this.DOMs = DOMs; // debug using
   this.playlist = playlist;
@@ -33,7 +36,12 @@ var player = function(containerID,files,config) {
     DOMs.playSpeedInfo.innerHTML = DOMs.video.playbackRate;
   }
 
-  var playVideo = function() {
+  // prettify code
+  var unattend = true;
+  var playVideo = function(unattend) {
+    if (unattend && !autoPlay) {
+      return 0;
+    }
     showPauseBtn(true);
     showPlayBtn(false);
     DOMs.video.play();
@@ -102,7 +110,7 @@ var player = function(containerID,files,config) {
     playStatus.playlistIndex += 1;
     if (playStatus.playlistIndex < playlist.length) {
       loadVideo();
-      playVideo();
+      playVideo(unattend);
     } else {
       console.log("ended");
     }
@@ -182,5 +190,5 @@ var player = function(containerID,files,config) {
   initButtonEvent();
 
   loadVideo();
-  playVideo();
+  playVideo(unattend);
 }
