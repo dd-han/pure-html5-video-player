@@ -13,7 +13,10 @@ var player = function(containerID,files,config) {
     video: {},
     seekbar: {},
     playSpeedInfo: {},
-    loadingHint: {}
+    loadingHint: {},
+    play: {},
+    pause: {},
+    stop: {}
   }
 
   var playStatus = {
@@ -31,14 +34,27 @@ var player = function(containerID,files,config) {
   }
 
   var playVideo = function() {
+    showPauseBtn(true);
+    showPlayBtn(false);
     DOMs.video.play();
   }
   this.playVideo = playVideo;
 
   var pauseVideo = function() {
+    showPauseBtn(false);
+    showPlayBtn(true);
     DOMs.video.pause();
   }
   this.pauseVideo = pauseVideo;
+
+  var stopVideo = function() {
+    showPauseBtn(false);
+    showPlayBtn(true);
+    playStatus.playlistIndex = 0;
+    loadVideo();
+    //DOMs.video.currentTime = 0;
+  }
+  this.stopVideo = stopVideo;
 
   var videoLaddedmetadataAction = function(event) {
     //var duration = DOMs.video.duration;
@@ -47,11 +63,15 @@ var player = function(containerID,files,config) {
   }
 
   var videoTimeupdateAction = function(event) {
-    var duration = DOMs.video.duration;
-    var position = event.target.played.end(0);
-    var seekbarValue = position / duration;
-    DOMs.seekbar.value = seekbarValue;
-    console.log("video time updated", position);
+    try {
+      var duration = DOMs.video.duration;
+      var position = event.target.played.end(0);
+      var seekbarValue = position / duration;
+      DOMs.seekbar.value = seekbarValue;
+      console.log("video time updated", position);
+    } catch (e) {
+      console.log("unable to update video timer");
+    }
   }
 
   var videoProgressAction = function(event) {
@@ -68,7 +88,7 @@ var player = function(containerID,files,config) {
   var videoPlayingAction = function(event) {
     if (playStatus.buffering) {
       console.log("buffered");
-      loadingHintDisplay(false);
+      showLoadingHintDisplay(false);
     }
     // seekbar updater
     //playStatus.checkTimer = setInterval(checkTimerAction,100);
@@ -89,7 +109,7 @@ var player = function(containerID,files,config) {
   }
 
   var loadingAction = function() {
-    loadingHintDisplay(true);
+    showLoadingHintDisplay(true);
     playStatus.buffering = true;
   };
 
@@ -98,11 +118,20 @@ var player = function(containerID,files,config) {
   }
 
   // low level functions
-  var loadingHintDisplay = function(showOrNot) {
-    if (showOrNot) {
-      DOMs.loadingHint.style.display="";
+  var showLoadingHintDisplay = function(show) {
+    showHideDOM(show,DOMs.loadingHint);
+  }
+  var showPauseBtn = function(show) {
+    showHideDOM(show,DOMs.pause);
+  }
+  var showPlayBtn = function(show) {
+    showHideDOM(show,DOMs.play);
+  }
+  var showHideDOM = function(show,DOM) {
+    if (show) {
+      DOM.style.display="";
     } else {
-      DOMs.loadingHint.style.display="none";
+      DOM.style.display="none";
     }
   }
 
@@ -114,6 +143,10 @@ var player = function(containerID,files,config) {
     DOMs.playSpeedInfo = DOMs.container.getElementsByClassName("play-speed-info")[0];
     DOMs.loadingHint = DOMs.container.getElementsByClassName("loading-hint")[0];
     DOMs.seekbar = DOMs.container.getElementsByClassName("seekbar")[0];
+    DOMs.pause = DOMs.container.getElementsByClassName("pause")[0];
+    DOMs.play = DOMs.container.getElementsByClassName("play")[0];
+    DOMs.stop = DOMs.container.getElementsByClassName("stop")[0];
+    showPauseBtn(false);
   }
   var initPlayer = function() {
     // setup player
@@ -136,11 +169,17 @@ var player = function(containerID,files,config) {
     DOMs.video.ontimeupdate = videoTimeupdateAction;
     DOMs.video.onloadedmetadata = videoLaddedmetadataAction;
   }
+  var initButtonEvent = function() {
+    DOMs.pause.onclick = pauseVideo;
+    DOMs.play.onclick = playVideo;
+    DOMs.stop.onclick = stopVideo;
+  }
 
   // constractor here
   initDOMs();
   initPlayerEvents();
   initPlayer();
+  initButtonEvent();
 
   loadVideo();
   playVideo();
