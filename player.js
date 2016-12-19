@@ -1,4 +1,9 @@
 var autoPlay = true;
+// undefined will show or hide field by video duration
+var alwaysShowHour = undefined;
+var alwaysShowMinute = undefined;
+var alwaysShowSecond = true;
+var alwaysShowMS = false;
 
 var createPlayer  = function() {
   throw("this function not working");
@@ -10,34 +15,32 @@ var createPlayer  = function() {
 var player = function(containerID,files,config) {
   // for internal access
   var playlist = [];
-  var DOMs = {
-    container: {},
-    video: {},
-    seekbar: {},
-    playSpeedInfo: {},
-    loadingHint: {},
-    play: {},
-    pause: {},
-    stop: {}
-  }
+  var DOMs = {};
 
   var playStatus = {
     buffering: false,
     playlistIndex: 0,
     dragging: false,
     playSpeed: 1,
+    durationInfo: {
+      hour: alwaysShowHour,
+      minute: alwaysShowMinute,
+      second: alwaysShowSecond,
+      ms: alwaysShowMS
+    }
   };
 
 
   // public access function
   this.DOMs = DOMs; // debug using
+  this.playStatus = playStatus;
   this.playlist = playlist;
   this.playStatus = playStatus;
 
   var setSpeed = function(speed) {
     playStatus.playSpeed = speed;
     DOMs.video.playbackRate = speed;
-    DOMs.playSpeedInfo.innerHTML = DOMs.video.playbackRate;
+    DOMs.speedInfo.innerHTML = DOMs.video.playbackRate;
   }
   this.setSpeed = setSpeed;
 
@@ -47,22 +50,19 @@ var player = function(containerID,files,config) {
     if (unattend && !autoPlay) {
       return 0;
     }
-    showPauseBtn(true);
-    showPlayBtn(false);
+    showPauseOrPlay(pauseButton);
     DOMs.video.play();
   }
   this.playVideo = playVideo;
 
   var pauseVideo = function() {
-    showPauseBtn(false);
-    showPlayBtn(true);
+    showPauseOrPlay(playButton);
     DOMs.video.pause();
   }
   this.pauseVideo = pauseVideo;
 
   var stopVideo = function() {
-    showPauseBtn(false);
-    showPlayBtn(true);
+    showPauseOrPlay(playButton);
     resetEnv();
   }
   this.stopVideo = stopVideo;
@@ -105,7 +105,8 @@ var player = function(containerID,files,config) {
   }
 
   var videoLaddedmetadataAction = function(event) {
-    //var duration = DOMs.video.duration;
+    var duration = DOMs.video.duration;
+    updateDurationInfo(formatTimeString(duration,true));
     //playlist[playStatus.playlistIndex].duration = duration;
     //console.log("meta loaded",duration);
   }
@@ -117,6 +118,8 @@ var player = function(containerID,files,config) {
     try {
       var duration = DOMs.video.duration;
       var position = event.target.currentTime;
+      var positionString = formatTimeString(position);
+      updatePositionInfo(positionString);
       var seekbarValue = position / duration;
       updateSeekbarPos(seekbarValue);
     } catch (e) {
@@ -171,8 +174,25 @@ var player = function(containerID,files,config) {
   var updateSeekbarPos = function(seekbarValue) {
     DOMs.seekbar.value = seekbarValue;
   }
+  var updateDurationInfo = function(value) {
+    DOMs.durationInfo.innerHTML = value;
+  }
+  var updatePositionInfo = function(value) {
+    DOMs.positionInfo.innerHTML = value;
+  }
   var showLoadingHintDisplay = function(show) {
     showHideDOM(show,DOMs.loadingHint);
+  }
+  var playButton = true;
+  var pauseButton = false;
+  var showPauseOrPlay = function(button) {
+    if (button) {
+      showPauseBtn(false);
+      showPlayBtn(true);
+    } else {
+      showPauseBtn(true);
+      showPlayBtn(false);
+    }
   }
   var showPauseBtn = function(show) {
     showHideDOM(show,DOMs.pause);
@@ -194,15 +214,75 @@ var player = function(containerID,files,config) {
     setTimeout(function() {
       DOMs.seekbar.value = 0;
     },100);
-
     playStatus = {
       buffering: false,
       playlistIndex: 0,
       dragging: false,
       playSpeed: 1,
-    };
-
+      durationInfo: {
+        hour: alwaysShowHour,
+        minute: alwaysShowMinute,
+        second: alwaysShowSecond,
+        ms: alwaysShowMS
+    }
     //DOMs.video.currentTime = 0;
+  }
+  var formatTimeString = function(time,updateDurationState) {
+    var timeObject = formatTime(time,updateDurationState);
+    var returnString = ""
+    
+    if (playStatus.durationInfo.ms===true) {
+      returnString = "." + leftpad(timeObject.ms,4,"0");
+    }
+
+    if (playStatus.durationInfo.second) {
+      returnString = leftpad(timeObject.second,2,"0") + returnString;
+    }
+
+    if (playStatus.durationInfo.minute) {
+      returnString = leftpad(timeObject.minute,2,"0") + ":" + returnString;
+    }
+
+    if (playStatus.durationInfo.hour) {
+      returnString = leftpad(timeObject.hour,2,"0") + ":" + returnString;
+    }
+
+    return returnString;
+  }
+  this.formatTimeString = formatTimeString;
+  var formatTime = function(time,updateState) {
+    var timeObject = {};
+    var durationInfo = playStatus.durationInfo;
+
+    // format second to second + ms
+    timeObject.ms = time % 1;
+    timeObject.second = time - timeObject.ms;
+
+    // javascript will make 0.1 to 0.1000000000003638
+    timeObject.ms = Math.round(timeObject.ms*1000)/1000;
+
+    // format second to minute + second
+    timeObject.minute = Math.floor(timeObject.second / 60 );
+    timeObject.second = timeObject.second % 60;
+    if (updateState && timeObject.minute>0 && durationInfo.minute === undefined) {
+      durationInfo.minute = true;
+    }
+
+    // format minute to hour + minute
+    timeObject.hour = Math.floor(timeObject.minute / 60 );
+    timeObject.minute = timeObject.minute % 60;
+    if (updateState && timeObject.hour>0 && durationInfo.hour === undefined) {
+      durationInfo.hour = true;
+    }
+    return timeObject;
+  }
+  this.formatTime = formatTime;
+  var leftpad = function(value,digital,prefix) {
+    var string = value.toString();
+    while (string.length < digital) {
+      string = prefix.toString() + string;
+    }
+    return string;
   }
 
   // inits
@@ -210,13 +290,18 @@ var player = function(containerID,files,config) {
     // find doms
     DOMs.container = document.getElementById(containerID);
     DOMs.video = DOMs.container.getElementsByTagName("video")[0];
-    DOMs.playSpeedInfo = DOMs.container.getElementsByClassName("play-speed-info")[0];
+    DOMs.speedInfo = DOMs.container.getElementsByClassName("speed-content")[0];
+    DOMs.durationInfo = DOMs.container.getElementsByClassName("duration-content")[0];
+    DOMs.positionInfo = DOMs.container.getElementsByClassName("position-content")[0];
     DOMs.loadingHint = DOMs.container.getElementsByClassName("loading-hint")[0];
     DOMs.seekbar = DOMs.container.getElementsByClassName("seekbar")[0];
     DOMs.pause = DOMs.container.getElementsByClassName("pause")[0];
     DOMs.play = DOMs.container.getElementsByClassName("play")[0];
     DOMs.stop = DOMs.container.getElementsByClassName("stop")[0];
-    showPauseBtn(false);
+    showPauseOrPlay(playButton);
+  }
+  var initDOMsValue = function() {
+    DOMs.speedInfo.innerHTML = DOMs.video.playbackRate;
   }
   var initPlayer = function() {
     // setup player
@@ -250,6 +335,7 @@ var player = function(containerID,files,config) {
 
   // constractor here
   initDOMs();
+  initDOMsValue();
   initPlayerEvents();
   initPlayer();
   initButtonEvent();

@@ -109,6 +109,19 @@ div#loading {
   /* padding-top: calc(40% - 12px);*/
 }
 
+table {
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid black;
+    min-width: 20px;
+}
+
+.mono-font {
+  font-family: monospace;
+}
+
 .seek-bar {
 	width: 100%;
 }
