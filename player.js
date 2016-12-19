@@ -224,6 +224,7 @@ var player = function(containerID,files,config) {
         minute: alwaysShowMinute,
         second: alwaysShowSecond,
         ms: alwaysShowMS
+      }
     }
     //DOMs.video.currentTime = 0;
   }
@@ -232,7 +233,7 @@ var player = function(containerID,files,config) {
     var returnString = ""
     
     if (playStatus.durationInfo.ms===true) {
-      returnString = "." + leftpad(timeObject.ms,4,"0");
+      returnString = "." + leftpad(timeObject.ms,3,"0");
     }
 
     if (playStatus.durationInfo.second) {
@@ -259,7 +260,7 @@ var player = function(containerID,files,config) {
     timeObject.second = time - timeObject.ms;
 
     // javascript will make 0.1 to 0.1000000000003638
-    timeObject.ms = Math.round(timeObject.ms*1000)/1000;
+    timeObject.ms = Math.round(timeObject.ms*1000);
 
     // format second to minute + second
     timeObject.minute = Math.floor(timeObject.second / 60 );
