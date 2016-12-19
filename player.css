@@ -7,7 +7,7 @@
 input[type=range] {
   -webkit-appearance: none;
   margin: 10px 0;
-  width: 100%;
+  /* width: 100%; */
 }
 input[type=range]:focus {
   outline: none;
@@ -122,7 +122,7 @@ table, th, td {
   font-family: monospace;
 }
 
-.seek-bar {
+.seekbar {
 	width: 100%;
 }
 
@@ -136,3 +136,13 @@ button.fa.control {
   font-size: small;
   width: 30px;
 }
+
+/*
+ * following code can hide native controller 
+video::-webkit-media-controls {
+  display:none !important;
+}
+video::-webkit-media-controls-enclosure {
+  display:none !important;
+}
+*/

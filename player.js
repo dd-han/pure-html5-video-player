@@ -4,6 +4,8 @@ var alwaysShowHour = undefined;
 var alwaysShowMinute = undefined;
 var alwaysShowSecond = true;
 var alwaysShowMS = false;
+var highVolumeClass = "fa-volume-up";
+var lowVolumeClass = "fa-volume-down";
 
 var createPlayer  = function() {
   throw("this function not working");
@@ -44,6 +46,27 @@ var player = function(containerID,files,config) {
   }
   this.setSpeed = setSpeed;
 
+  var setVolumeOnchange = function(event) {
+    console.log(event);
+    var volume = event.target.value;
+    setVolume(volume);
+  }
+  this.setVolumeOnchange = setVolumeOnchange;
+
+  var setVolume = function(volume) {
+    DOMs.video.volume = volume;
+  }
+  this.setVolume = setVolume;
+
+  var setMute = function(mute) {
+    if (mute) {
+      DOMs.video.muted = 1;
+    } else {
+      DOMs.video.muted = 0;
+    }
+  }
+  this.setMute = setMute;
+
   // prettify code
   var unattend = true;
   var playVideo = function(unattend) {
@@ -66,6 +89,18 @@ var player = function(containerID,files,config) {
     resetEnv();
   }
   this.stopVideo = stopVideo;
+
+  var fullscreen = function() {
+    var elem = DOMs.video;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen();
+    } else if (elem.mozRequestFullScreen) {
+      elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    }
+  }
+  this.fullscreen = fullscreen;
 
 
   // event actions (most private)
@@ -91,6 +126,27 @@ var player = function(containerID,files,config) {
        break;
     }
     //resetEnv();
+  }
+
+  var videoVolumechangeAction = function(event) {
+    var volume = event.target.volume;
+    if (event.target.muted==true) {
+      volume = 0;
+    }
+    //console.log("volume changed to ", volume);
+
+    if (volume==0) {
+      showMuteOrUnmute(unmuteButton);
+    } else {
+      showMuteOrUnmute(muteButton);
+    }
+    updateVolumebarPos(volume);
+
+    if (volume>=0.5) {
+      updateVolumeIcon(true);
+    } else {
+      updateVolumeIcon(false);
+    }
   }
 
   var seekbarInputAction = function(event) {
@@ -171,6 +227,26 @@ var player = function(containerID,files,config) {
   }
 
   // low level functions
+  var updateVolumebarPos = function(volume) {
+    DOMs.volumebar.value = volume;
+  }
+  var hight = true;
+  var low = false;
+  var updateVolumeIcon = function(hightOrLow) {
+    if (hightOrLow) {
+      if (!checkClass(DOMs.mute,highVolumeClass)) {
+        removeClass(DOMs.mute,lowVolumeClass);
+        appendClass(DOMs.mute,highVolumeClass);
+        console.log("change icon")
+      }
+    } else {
+      if (!checkClass(DOMs.mute,lowVolumeClass)) {
+        removeClass(DOMs.mute,highVolumeClass);
+        appendClass(DOMs.mute,lowVolumeClass);
+        console.log("change icon")
+      }
+    }
+  }
   var updateSeekbarPos = function(seekbarValue) {
     DOMs.seekbar.value = seekbarValue;
   }
@@ -193,6 +269,23 @@ var player = function(containerID,files,config) {
       showPauseBtn(true);
       showPlayBtn(false);
     }
+  }
+  var muteButton = true;
+  var unmuteButton = false;
+  var showMuteOrUnmute = function(button) {
+    if (button) {
+      showMuteBtn(true);
+      showUnmuteBtn(false);
+    } else {
+      showMuteBtn(false);
+      showUnmuteBtn(true);
+    }
+  }
+  var showMuteBtn = function(show) {
+    showHideDOM(show,DOMs.mute);
+  }
+  var showUnmuteBtn = function(show) {
+    showHideDOM(show,DOMs.unmute);
   }
   var showPauseBtn = function(show) {
     showHideDOM(show,DOMs.pause);
@@ -286,6 +379,28 @@ var player = function(containerID,files,config) {
     return string;
   }
 
+  // low as jQuery
+  var checkClass = function(DOM,classToFind) {
+    var classes = DOM.className;
+    if (classes.search(classToFind)==-1) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+  var removeClass = function(DOM,classToReomve) {
+    var classes = DOM.className;
+    var newClasses = classes.replace(classToReomve,"");
+
+    DOM.className = newClasses;
+  }
+
+  var appendClass = function(DOM,classToAppend) {
+    var classes = DOM.className + classToAppend.toString() ;
+
+    DOM.className = classes;
+  }
+
   // inits
   var initDOMs = function() {
     // find doms
@@ -296,10 +411,15 @@ var player = function(containerID,files,config) {
     DOMs.positionInfo = DOMs.container.getElementsByClassName("position-content")[0];
     DOMs.loadingHint = DOMs.container.getElementsByClassName("loading-hint")[0];
     DOMs.seekbar = DOMs.container.getElementsByClassName("seekbar")[0];
+    DOMs.volumebar = DOMs.container.getElementsByClassName("volumebar")[0];
     DOMs.pause = DOMs.container.getElementsByClassName("pause")[0];
     DOMs.play = DOMs.container.getElementsByClassName("play")[0];
     DOMs.stop = DOMs.container.getElementsByClassName("stop")[0];
+    DOMs.fullscreen = DOMs.container.getElementsByClassName("fullscreen")[0];
+    DOMs.mute = DOMs.container.getElementsByClassName("mute")[0];
+    DOMs.unmute = DOMs.container.getElementsByClassName("unmute")[0];
     showPauseOrPlay(playButton);
+    showMuteOrUnmute(muteButton);
   }
   var initDOMsValue = function() {
     DOMs.speedInfo.innerHTML = DOMs.video.playbackRate;
@@ -325,13 +445,19 @@ var player = function(containerID,files,config) {
     DOMs.video.ontimeupdate = videoTimeupdateAction;
     DOMs.video.onloadedmetadata = videoLaddedmetadataAction;
     DOMs.video.onerror = videoErrorAction;
+    DOMs.video.onvolumechange = videoVolumechangeAction;
   }
   var initButtonEvent = function() {
     DOMs.pause.onclick = pauseVideo;
     DOMs.play.onclick = playVideo;
     DOMs.stop.onclick = stopVideo;
+    DOMs.fullscreen.onclick = fullscreen;
+    DOMs.mute.onclick = function() {setMute(true)};
+    DOMs.unmute.onclick = function() {setMute(false)};
     DOMs.seekbar.oninput = seekbarInputAction;
     DOMs.seekbar.onchange = seekbarChangeAction;
+    DOMs.volumebar.oninput = setVolumeOnchange;
+    DOMs.volumebar.onchange = setVolumeOnchange;
   }
 
   // constractor here
