@@ -67,6 +67,32 @@ var player = function(containerID,files,config) {
   }
   this.stopVideo = stopVideo;
 
+
+  // event actions (most private)
+  var videoErrorAction = function(event) {
+  
+    // error code here: http://www.w3schools.com/tags/av_prop_error.asp
+    var error = event.target.error;
+    switch (event.target.error.code) {
+     case error.MEDIA_ERR_ABORTED:
+       alert('MEDIA_ERR_ABORTED');
+       break;
+     case error.MEDIA_ERR_NETWORK:
+       alert('MEDIA_ERR_NETWORK');
+       break;
+     case error.MEDIA_ERR_DECODE:
+       alert('MEDIA_ERR_DECODE');
+       break;
+     case error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+       alert('MEDIA_ERR_SRC_NOT_SUPPORTED');
+       break;
+     default:
+       alert('An unknown error occurred.');
+       break;
+    }
+    //resetEnv();
+  }
+
   var seekbarInputAction = function(event) {
     playStatus.dragging = true;
   }
@@ -85,7 +111,6 @@ var player = function(containerID,files,config) {
   }
 
   var videoTimeupdateAction = function(event) {
-    console.log("video time updated");
     if (playStatus.dragging===true) {
       return 0;
     }
@@ -93,10 +118,9 @@ var player = function(containerID,files,config) {
       var duration = DOMs.video.duration;
       var position = event.target.currentTime;
       var seekbarValue = position / duration;
-      DOMs.seekbar.value = seekbarValue;
-      console.log("video time updated", position);
+      updateSeekbarPos(seekbarValue);
     } catch (e) {
-      console.log("unable to update video timer");
+      console.warn("unable to update video time");
     }
   }
 
@@ -113,7 +137,6 @@ var player = function(containerID,files,config) {
   // onplaying works on anything that resume playing like buffered
   var videoPlayingAction = function(event) {
     if (playStatus.buffering) {
-      console.log("buffered");
       showLoadingHintDisplay(false);
     }
     // seekbar updater
@@ -145,6 +168,9 @@ var player = function(containerID,files,config) {
   }
 
   // low level functions
+  var updateSeekbarPos = function(seekbarValue) {
+    DOMs.seekbar.value = seekbarValue;
+  }
   var showLoadingHintDisplay = function(show) {
     showHideDOM(show,DOMs.loadingHint);
   }
@@ -212,6 +238,7 @@ var player = function(containerID,files,config) {
     DOMs.video.onprogress = videoProgressAction;
     DOMs.video.ontimeupdate = videoTimeupdateAction;
     DOMs.video.onloadedmetadata = videoLaddedmetadataAction;
+    DOMs.video.onerror = videoErrorAction;
   }
   var initButtonEvent = function() {
     DOMs.pause.onclick = pauseVideo;
