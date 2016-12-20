@@ -34,11 +34,12 @@ var player = function(containerID,files,config) {
 
 
   // public access function
-  this.DOMs = DOMs; // debug using
+  // debug using
+  this.DOMs = DOMs;
   this.playStatus = playStatus;
   this.playlist = playlist;
-  this.playStatus = playStatus;
 
+  // must public
   var setSpeed = function(speed) {
     playStatus.playSpeed = speed;
     DOMs.video.playbackRate = speed;
@@ -67,10 +68,13 @@ var player = function(containerID,files,config) {
   }
   this.setMute = setMute;
 
-  // prettify code
-  var unattend = true;
-  var playVideo = function(unattend) {
-    if (unattend && !autoPlay) {
+  var unattend = 1;  // prettify code
+  var current = 2;
+  var playVideo = function(mode) {
+    if (mode==unattend && !autoPlay) {
+      return 0;
+    }
+    if (mode==current && DOMs.video.paused) {
       return 0;
     }
     showPauseOrPlay(pauseButton);
@@ -102,6 +106,52 @@ var player = function(containerID,files,config) {
   }
   this.fullscreen = fullscreen;
 
+  var shiftFiles = function(files) {
+    if (files===undefined) {
+      console.err("no files input");
+    }
+    var targetFileIndex = playStatus.playlistIndex + files;
+    var currentFileIndex = playStatus.playlistIndex;
+    if (targetFileIndex<0) {
+      if (currentFileIndex==0) {
+        shiftTimes("HEAD");
+      } else {
+        console.warn("no enough file to shift");
+      }
+    } else if (targetFileIndex+1 > playlist.length) {
+      if (currentFileIndex+1==playlist.length) {
+        shiftTimes("END");
+      } else {
+        console.warn("no enough file to shift");
+      }
+    } else {
+      shiftToFile(targetFileIndex);
+    }
+  }
+  this.shiftFiles = shiftFiles;
+
+  var shiftToFile = function(fileIndex) {
+    playStatus.playlistIndex = fileIndex;
+    loadVideo();
+    playVideo(current);
+  }
+
+  var shiftTimes = function(second) {
+    var shiftSconed = second;
+    if (shiftSconed=="END") {
+      shiftToTime(DOMs.video.duration);
+    } else if (shiftSconed=="HEAD") {
+      shiftToTime(0);
+    } else {
+      DOMs.video.currentTime += shiftSconed;
+    }
+  }
+  this.shiftTimes = shiftTimes;
+
+  var shiftToTime = function(timePos) {
+    DOMs.video.currentTime = timePos;
+  }
+  this.shiftToTime = shiftToTime;
 
   // event actions (most private)
   var videoErrorAction = function(event) {
@@ -418,6 +468,10 @@ var player = function(containerID,files,config) {
     DOMs.fullscreen = DOMs.container.getElementsByClassName("fullscreen")[0];
     DOMs.mute = DOMs.container.getElementsByClassName("mute")[0];
     DOMs.unmute = DOMs.container.getElementsByClassName("unmute")[0];
+    DOMs.previous = DOMs.container.getElementsByClassName("previous")[0];
+    DOMs.next = DOMs.container.getElementsByClassName("next")[0];
+    DOMs.backward = DOMs.container.getElementsByClassName("backward")[0];
+    DOMs.forward = DOMs.container.getElementsByClassName("forward")[0];
     showPauseOrPlay(playButton);
     showMuteOrUnmute(muteButton);
   }
@@ -454,6 +508,10 @@ var player = function(containerID,files,config) {
     DOMs.fullscreen.onclick = fullscreen;
     DOMs.mute.onclick = function() {setMute(true)};
     DOMs.unmute.onclick = function() {setMute(false)};
+    DOMs.previous.onclick = function() {shiftFiles(-1)};
+    DOMs.next.onclick = function() {shiftFiles(1)};
+    DOMs.backward.onclick = function() {shiftTimes(-1)};
+    DOMs.forward.onclick = function() {shiftTimes(1)};
     DOMs.seekbar.oninput = seekbarInputAction;
     DOMs.seekbar.onchange = seekbarChangeAction;
     DOMs.volumebar.oninput = setVolumeOnchange;
